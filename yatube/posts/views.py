@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post, Group, User, Follow
+from .models import Post, User, Follow
 from django.core.paginator import Paginator
 from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
@@ -21,13 +21,12 @@ def index(request):
 
 
 def group_posts(request, slug):
-    group = get_object_or_404(Group, slug=slug)
-    posts = Post.objects.filter(group=group).all()
-    paginator = Paginator(posts, 10)
+    posts = Post.objects.select_related('group').filter(group__slug=slug)
+    paginator = Paginator(posts, POSTS_PER_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
-        'group': group,
+        'group': posts.first().group,
         'page_obj': page_obj,
         'posts': posts,
     }
@@ -134,10 +133,6 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    user = request.user
     author = get_object_or_404(User, username=username)
-    follow_check = Follow.objects.filter(user=user, author=author)
-    if follow_check:
-        Follow.objects.filter(user=request.user, author=author).exists()
-        follow_check.delete()
+    Follow.objects.filter(user=request.user, author=author).delete()
     return redirect('posts:profile', username=username)

@@ -8,7 +8,8 @@ class PostForm(forms.ModelForm):
         fields = ('group', 'text', 'image')
         labels = {
             'text': 'Текст поста',
-            'group': 'Группа'
+            'group': 'Группа',
+            'image': 'Картинка'
         }
 
     def clean_subject(self):
