@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post, User, Follow
+from .models import Post, Group, User, Follow
 from django.core.paginator import Paginator
 from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
@@ -21,14 +21,16 @@ def index(request):
 
 
 def group_posts(request, slug):
-    posts = Post.objects.select_related('group').filter(group__slug=slug)
-    paginator = Paginator(posts, POSTS_PER_PAGE)
+    group = get_object_or_404(
+        Group.objects.select_related(), slug=slug
+    )
+    post_list = Post.objects.all()
+    paginator = Paginator(post_list, POSTS_PER_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
-        'group': posts.first().group,
-        'page_obj': page_obj,
-        'posts': posts,
+        'group': group,
+        'page_obj': page_obj
     }
     return render(request, 'posts/group_list.html', context)
 
